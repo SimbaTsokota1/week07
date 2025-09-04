@@ -18,9 +18,6 @@ on:
 
 # Define global environment variables that can be used across jobs
 env:
-  # ACR Login Server (e.g., myregistry.azurecr.io)
-  # This needs to be set as a GitHub Repository Secret
-  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
   # Dynamically generate image tags based on Git SHA and GitHub Run ID
   # This provides unique, traceable tags for each image build
   IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}
@@ -124,21 +121,27 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }} # Needs to be set as a GitHub Secret (Service Principal JSON)
 
+    # Set ACR Login Server for testing
+    - name: Set ACR Login Server
+      run: |
+        echo "ACR_LOGIN_SERVER=week07acr25102.azurecr.io" >> $GITHUB_ENV
+        echo "ACR Login Server: week07acr25102.azurecr.io"
+
     # Login to Azure Container Registry (ACR)
     - name: Login to Azure Container Registry
-      run: az acr login --name ${{ env.ACR_LOGIN_SERVER }}
+      run: az acr login --name week07acr25102
 
     # Build and Push Docker image for Product Service
     - name: Build and Push Product Service Image
       run: |
-        docker buildx build -t ${{ env.ACR_LOGIN_SERVER }}/product_service:latest --platform linux/amd64 --load ./backend/product_service
-        docker push ${{ env.ACR_LOGIN_SERVER }}/product_service:latest
+        docker buildx build -t week07acr25102.azurecr.io/product_service:latest --platform linux/amd64 --load ./backend/product_service
+        docker push week07acr25102.azurecr.io/product_service:latest
 
     # Build and Push Docker image for Order Service
     - name: Build and Push Order Service Image
       run: |
-        docker buildx build -t ${{ env.ACR_LOGIN_SERVER }}/order_service:latest --platform linux/amd64 --load ./backend/order_service
-        docker push ${{ env.ACR_LOGIN_SERVER }}/order_service:latest
+        docker buildx build -t week07acr25102.azurecr.io/order_service:latest --platform linux/amd64 --load ./backend/order_service
+        docker push week07acr25102.azurecr.io/order_service:latest
 
     # Logout from Azure for security (runs even if image push fails)
     - name: Logout from Azure
